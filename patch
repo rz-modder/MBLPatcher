@@ -1,0 +1,84 @@
+#!/system/bin/sh
+
+inputPath() {
+  while(true)do
+    read -p "libminecraftpe path: " libmcpe
+    if [ "$libmcpe" = "" ]; then
+      echo "path cannot be empty!"
+      echo
+      inputPath
+    elif [ ! "$libmcpe" = "" ]; then
+      if [ -f "$libmcpe" ]; then
+        startPatch
+        return
+      elif [ ! -f "$libmcpe" ]; then
+        echo "invalid file!"
+        echo
+        inputPath
+      fi
+    fi
+  done
+}
+
+selectArch() {
+  while(true)do
+    read -p "select arch (32/64): " arch
+    if [ "$arch" = "" ]; then
+      echo "arch cannot be empty!"
+      echo
+      selectArch
+    elif [ "$arch" = "32" ]; then
+      AARCH=""
+      return
+    elif [ "$arch" = "64" ]; then
+      AARCH="64"
+      return
+    fi
+  done
+}
+
+startPatch() {
+  selectArch
+  if [ ! -f "/data/data/com.termux/files/usr/bin/patchelf" ]; then
+    cp patchelf"$AARCH" /data/data/com.termux/files/usr/bin/patchelf
+    chmod 777 /data/data/com.termux/files/usr/bin/patchelf
+    startPatch
+  fi
+  if [ -f "/data/data/com.termux/files/usr/bin/patchelf" ]; then
+    patchelf --add-needed libmaterialbinloader-arm"$AARCH".so "$libmcpe"
+    echo "Done!"
+    echo
+    exit 0
+  fi
+}
+
+if [ ! "$1" = "" ]; then
+  libmcpe=$1
+  if [ -f "$libmcpe" ]; then
+    startPatch
+  elif [ ! -f "$libmcpe" ]; then
+    echo "invalid file!"
+    echo
+    exit 0
+  fi
+fi
+
+clear
+echo "×××××××××××××××××××××××××××××"
+echo "  MaterialBinLoader Patcher  "
+echo "×××××××××××××××××××××××××××××"
+echo "  github.com/rz-modder/MBLPatcher"
+echo "  github.com/ddf8196/MaterialBinLoader"
+echo
+echo "  1.Patch"
+echo "  0.Close"
+echo
+read -p "> " p1
+
+if [ "$p1" = "1" ]; then
+  echo
+  inputPath
+elif [ "$p1" = "0" ]; then
+  echo
+  exit 0
+fi
